@@ -6,6 +6,8 @@ import { MarketHero } from './components/MarketHero';
 import { InteractiveChart } from './components/InteractiveChart';
 import { TechnicalGauge } from './components/TechnicalGauge';
 import { SymbolProfileCard } from './components/SymbolProfileCard';
+import { OrderBookDOM } from './components/OrderBookDOM';
+import { StrategyBacktester } from './components/StrategyBacktester';
 import { MarketHeatmap } from './components/MarketHeatmap';
 import { MarketMoversTable } from './components/MarketMoversTable';
 import { GlobalIndices } from './components/GlobalIndices';
@@ -14,7 +16,10 @@ import { MarketNews } from './components/MarketNews';
 import { SymbolSearchModal } from './components/SymbolSearchModal';
 import { WatchlistDrawer } from './components/WatchlistDrawer';
 import { PaperTradeModal } from './components/PaperTradeModal';
+import { AlertsModal } from './components/AlertsModal';
 import { Footer } from './components/Footer';
+import { BellRing, X } from 'lucide-react';
+import { generateCandleSeries } from './data/mockMarketData';
 
 export default function App() {
   const [darkMode, setDarkMode] = useState<boolean>(true);
@@ -22,21 +27,30 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [isWatchlistOpen, setIsWatchlistOpen] = useState<boolean>(false);
   const [isTradeOpen, setIsTradeOpen] = useState<boolean>(false);
+  const [isAlertsOpen, setIsAlertsOpen] = useState<boolean>(false);
 
   const {
     symbols,
     selectedSymbol,
     selectedSymbolId,
     setSelectedSymbolId,
+    secondarySymbolId,
+    setSecondarySymbolId,
     activeTimeframe,
     setActiveTimeframe,
     chartType,
     setChartType,
+    chartLayout,
+    setChartLayout,
     showIndicators,
     setShowIndicators,
     candles,
     watchlist,
     toggleWatchlist,
+    alerts,
+    createAlert,
+    deleteAlert,
+    alertNotification,
     cashBalance,
     positions,
     executeTrade,
@@ -70,27 +84,64 @@ export default function App() {
     return counts;
   }, [symbols]);
 
+  // Secondary symbol for dual split layout
+  const secondarySymbol = useMemo(() => {
+    return symbols.find((s) => s.symbol === secondarySymbolId) || symbols[1] || symbols[0];
+  }, [symbols, secondarySymbolId]);
+
+  const secondaryCandles = useMemo(() => {
+    return generateCandleSeries(secondarySymbol.price, 65, activeTimeframe);
+  }, [secondarySymbol.price, activeTimeframe]);
+
   // Scroll to chart when a symbol is selected
   const handleSelectSymbol = (symbolId: string) => {
     setSelectedSymbolId(symbolId);
     window.scrollTo({ top: 120, behavior: 'smooth' });
   };
 
+  const handleQuickTradeFromDOM = (price: number, side: 'BUY' | 'SELL') => {
+    setIsTradeOpen(true);
+  };
+
+  const activeAlertsCount = alerts.filter((a) => !a.triggered).length;
+
   return (
     <div className="min-h-screen flex flex-col font-['Plus_Jakarta_Sans']">
-      {/* 1. Global Navigation Bar */}
+      {/* 1. Global Navigation Bar with PRO controls */}
       <Header
         darkMode={darkMode}
         setDarkMode={setDarkMode}
         onOpenSearch={() => setIsSearchOpen(true)}
         onToggleWatchlist={() => setIsWatchlistOpen(!isWatchlistOpen)}
+        onOpenAlerts={() => setIsAlertsOpen(true)}
+        activeAlertsCount={activeAlertsCount}
         watchlistCount={watchlist.length}
         cashBalance={cashBalance}
         openPositionsCount={positions.length}
         onOpenPaperTrade={() => setIsTradeOpen(true)}
         activeNavTab={activeCategory}
         setActiveNavTab={setActiveCategory}
+        chartLayout={chartLayout}
+        setChartLayout={setChartLayout}
       />
+
+      {/* Real-time Alert Notification Toast */}
+      {alertNotification && (
+        <div className="bg-[#2962ff] text-white text-xs px-4 py-2 flex items-center justify-between font-semibold shadow-md animate-in slide-in-from-top duration-200">
+          <div className="max-w-[1720px] mx-auto w-full flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BellRing className="w-4 h-4 animate-bounce" />
+              <span>{alertNotification}</span>
+            </div>
+            <button
+              onClick={() => setIsAlertsOpen(true)}
+              className="text-white hover:underline text-xs bg-white/20 px-2 py-0.5 rounded"
+            >
+              View Alerts
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 2. Top Live Ticker Tape Marquee */}
       <TickerTape
@@ -120,29 +171,81 @@ export default function App() {
         {/* Primary Interactive Chart & Deep-Dive Analysis Split */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Main Chart Column (8 cols on desktop) */}
-          <div className="lg:col-span-8 xl:col-span-9 space-y-6">
-            <InteractiveChart
-              symbol={selectedSymbol}
-              candles={candles}
-              timeframe={activeTimeframe}
-              setTimeframe={setActiveTimeframe}
-              chartType={chartType}
-              setChartType={setChartType}
-              showIndicators={showIndicators}
-              setShowIndicators={setShowIndicators}
-              isWatchlisted={watchlist.includes(selectedSymbol.symbol)}
-              onToggleWatchlist={() => toggleWatchlist(selectedSymbol.symbol)}
-              onOpenTrade={() => setIsTradeOpen(true)}
-            />
+          <div className="lg:col-span-8 xl:col-span-9 space-y-4">
+            {/* Multi-Chart Layout Container */}
+            {chartLayout === '1' ? (
+              <InteractiveChart
+                symbol={selectedSymbol}
+                candles={candles}
+                timeframe={activeTimeframe}
+                setTimeframe={setActiveTimeframe}
+                chartType={chartType}
+                setChartType={setChartType}
+                showIndicators={showIndicators}
+                setShowIndicators={setShowIndicators}
+                isWatchlisted={watchlist.includes(selectedSymbol.symbol)}
+                onToggleWatchlist={() => toggleWatchlist(selectedSymbol.symbol)}
+                onOpenTrade={() => setIsTradeOpen(true)}
+                onOpenAlerts={() => setIsAlertsOpen(true)}
+                chartLayout={chartLayout}
+                setChartLayout={setChartLayout}
+              />
+            ) : (
+              /* Dual Split Layout (2 charts side-by-side) */
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <InteractiveChart
+                  symbol={selectedSymbol}
+                  candles={candles}
+                  timeframe={activeTimeframe}
+                  setTimeframe={setActiveTimeframe}
+                  chartType={chartType}
+                  setChartType={setChartType}
+                  showIndicators={showIndicators}
+                  setShowIndicators={setShowIndicators}
+                  isWatchlisted={watchlist.includes(selectedSymbol.symbol)}
+                  onToggleWatchlist={() => toggleWatchlist(selectedSymbol.symbol)}
+                  onOpenTrade={() => setIsTradeOpen(true)}
+                  onOpenAlerts={() => setIsAlertsOpen(true)}
+                  chartLayout={chartLayout}
+                  setChartLayout={setChartLayout}
+                />
+                <InteractiveChart
+                  symbol={secondarySymbol}
+                  candles={secondaryCandles}
+                  timeframe={activeTimeframe}
+                  setTimeframe={setActiveTimeframe}
+                  chartType={chartType}
+                  setChartType={setChartType}
+                  showIndicators={showIndicators}
+                  setShowIndicators={setShowIndicators}
+                  isWatchlisted={watchlist.includes(secondarySymbol.symbol)}
+                  onToggleWatchlist={() => toggleWatchlist(secondarySymbol.symbol)}
+                  onOpenTrade={() => setIsTradeOpen(true)}
+                  onOpenAlerts={() => setIsAlertsOpen(true)}
+                  chartLayout={chartLayout}
+                  setChartLayout={setChartLayout}
+                />
+              </div>
+            )}
 
-            {/* S&P 500 Market Heatmap (Treemap) */}
+            {/* Pine Script Quantitative Strategy Backtester */}
+            <StrategyBacktester symbol={selectedSymbol.symbol} />
+
+            {/* S&P 500 Market Heatmap (Treemap with 1D, 1W, 1M & P/E ratio modes) */}
             <section id="heatmap">
               <MarketHeatmap onSelectSymbol={handleSelectSymbol} />
             </section>
           </div>
 
-          {/* Right Sidebar Column: Gauge, Valuation Stats & Calendar (4 cols on desktop) */}
-          <div className="lg:col-span-4 xl:col-span-3 space-y-6">
+          {/* Right Sidebar Column: L2 Order Book, Technical Momentum Gauge, Valuation & Calendar */}
+          <div className="lg:col-span-4 xl:col-span-3 space-y-4">
+            {/* Level 2 Order Book / Depth of Market */}
+            <OrderBookDOM
+              currentPrice={selectedSymbol.price}
+              symbol={selectedSymbol.symbol}
+              onQuickTrade={handleQuickTradeFromDOM}
+            />
+
             {/* Technical Momentum Gauge */}
             <TechnicalGauge
               rating={selectedSymbol.rating}
@@ -211,7 +314,17 @@ export default function App() {
         onClosePosition={closePosition}
       />
 
-      {/* 8. TradingView Footer */}
+      {/* 8. Price Alerts Modal */}
+      <AlertsModal
+        isOpen={isAlertsOpen}
+        onClose={() => setIsAlertsOpen(false)}
+        symbol={selectedSymbol}
+        alerts={alerts}
+        onCreateAlert={createAlert}
+        onDeleteAlert={deleteAlert}
+      />
+
+      {/* 9. TradingView Footer */}
       <Footer />
     </div>
   );

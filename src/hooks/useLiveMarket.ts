@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MarketSymbol, Candle, TradePosition } from '../types/market';
+import { MarketSymbol, Candle, TradePosition, PriceAlert } from '../types/market';
 import { INITIAL_MARKET_SYMBOLS, generateCandleSeries } from '../data/mockMarketData';
 
 export function useLiveMarket() {
@@ -9,16 +9,30 @@ export function useLiveMarket() {
 
   const [selectedSymbolId, setSelectedSymbolId] = useState<string>('SPX');
   const [activeTimeframe, setActiveTimeframe] = useState<string>('1D');
-  const [chartType, setChartType] = useState<'candle' | 'area' | 'line'>('candle');
+  const [chartType, setChartType] = useState<'candle' | 'heikin' | 'area' | 'line'>('candle');
+  const [chartLayout, setChartLayout] = useState<'1' | '2' | '4'>('1');
+
+  // Multi-chart layout secondary symbols
+  const [secondarySymbolId, setSecondarySymbolId] = useState<string>('NDX');
+  const [tertiarySymbolId, setTertiarySymbolId] = useState<string>('BTCUSD');
+  const [quaternarySymbolId, setQuaternarySymbolId] = useState<string>('NVDA');
+
+  // Indicators state
   const [showIndicators, setShowIndicators] = useState<{
     ma20: boolean;
     ma50: boolean;
+    vwap: boolean;
+    supertrend: boolean;
+    volumeProfile: boolean;
     bollinger: boolean;
     rsi: boolean;
     volume: boolean;
   }>({
     ma20: true,
     ma50: true,
+    vwap: true,
+    supertrend: false,
+    volumeProfile: true,
     bollinger: false,
     rsi: false,
     volume: true,
@@ -33,6 +47,42 @@ export function useLiveMarket() {
       return ['SPX', 'NDX', 'NVDA', 'AAPL', 'BTCUSD', 'XAUUSD'];
     }
   });
+
+  // Price Alerts persistence
+  const [alerts, setAlerts] = useState<PriceAlert[]>(() => {
+    try {
+      const saved = localStorage.getItem('tv_alerts');
+      return saved
+        ? JSON.parse(saved)
+        : [
+            {
+              id: 'alt-1',
+              symbol: 'NVDA',
+              targetPrice: 152.0,
+              condition: 'crossing_up',
+              createdPrice: 148.25,
+              createdAt: Date.now(),
+              triggered: false,
+              note: 'Breakout above $152 resistance',
+            },
+            {
+              id: 'alt-2',
+              symbol: 'SPX',
+              targetPrice: 6000.0,
+              condition: 'crossing_up',
+              createdPrice: 5983.25,
+              createdAt: Date.now(),
+              triggered: false,
+              note: 'Psychological 6,000 milestone',
+            },
+          ];
+    } catch {
+      return [];
+    }
+  });
+
+  // Toast / alert banner message
+  const [alertNotification, setAlertNotification] = useState<string | null>(null);
 
   // Paper Trading state
   const [cashBalance, setCashBalance] = useState<number>(() => {
@@ -56,24 +106,25 @@ export function useLiveMarket() {
   // Candle data for current active symbol
   const selectedSymbol = symbols.find((s) => s.symbol === selectedSymbolId) || symbols[0];
   const [candles, setCandles] = useState<Candle[]>(() => {
-    return generateCandleSeries(selectedSymbol.price, 50, '1D');
+    return generateCandleSeries(selectedSymbol.price, 65, activeTimeframe);
   });
 
   // Regenerate candles when symbol or timeframe changes
   useEffect(() => {
     if (selectedSymbol) {
-      setCandles(generateCandleSeries(selectedSymbol.price, 50, activeTimeframe));
+      setCandles(generateCandleSeries(selectedSymbol.price, 65, activeTimeframe));
     }
   }, [selectedSymbolId, activeTimeframe]);
 
-  // Save watchlist to localStorage
+  // Save watchlist & alerts to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('tv_watchlist', JSON.stringify(watchlist));
+      localStorage.setItem('tv_alerts', JSON.stringify(alerts));
     } catch (e) {
       console.error(e);
     }
-  }, [watchlist]);
+  }, [watchlist, alerts]);
 
   // Save paper trading to localStorage
   useEffect(() => {
@@ -85,18 +136,16 @@ export function useLiveMarket() {
     }
   }, [cashBalance, positions]);
 
-  // Simulate real-time ticking market feed (TradingView live pulse)
+  // Simulate real-time ticking market feed & check alerts
   useEffect(() => {
     const interval = setInterval(() => {
-      // Pick 2-3 random symbols to tick
       setSymbols((prevSymbols) => {
         return prevSymbols.map((item) => {
-          // 40% chance to update in this interval
           if (Math.random() > 0.45) return item;
 
           const isCrypto = item.type === 'crypto';
           const volatilityPct = isCrypto ? 0.0012 : 0.0006;
-          const deltaPct = (Math.random() - 0.49) * volatilityPct;
+          const deltaPct = (Math.random() - 0.485) * volatilityPct;
           const newPrice = Number(Math.max(item.price * (1 + deltaPct), 0.0001).toFixed(item.price < 10 ? 4 : 2));
           const priceDiff = newPrice - item.open;
           const newChange = Number(priceDiff.toFixed(item.price < 10 ? 4 : 2));
@@ -104,8 +153,24 @@ export function useLiveMarket() {
           const newHigh = Math.max(item.high, newPrice);
           const newLow = Math.min(item.low, newPrice);
 
-          // Update sparkline
           const newSparkline = [...item.sparkline.slice(1), newPrice];
+
+          // Check alerts for this symbol
+          alerts.forEach((alt) => {
+            if (alt.symbol === item.symbol && !alt.triggered) {
+              const triggered =
+                (alt.condition === 'crossing_up' && newPrice >= alt.targetPrice && item.price < alt.targetPrice) ||
+                (alt.condition === 'crossing_down' && newPrice <= alt.targetPrice && item.price > alt.targetPrice) ||
+                (alt.condition === 'greater_than' && newPrice >= alt.targetPrice) ||
+                (alt.condition === 'less_than' && newPrice <= alt.targetPrice);
+
+              if (triggered) {
+                setAlerts((prev) => prev.map((a) => (a.id === alt.id ? { ...a, triggered: true } : a)));
+                setAlertNotification(`🚨 PRO ALERT TRIGGERED: ${item.symbol} crossed target price $${alt.targetPrice}!`);
+                setTimeout(() => setAlertNotification(null), 5000);
+              }
+            }
+          });
 
           return {
             ...item,
@@ -118,10 +183,10 @@ export function useLiveMarket() {
           };
         });
       });
-    }, 1400);
+    }, 1300);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [alerts]);
 
   // Update latest candle in real time with active symbol price
   useEffect(() => {
@@ -135,7 +200,7 @@ export function useLiveMarket() {
         close: selectedSymbol.price,
         high: Math.max(last.high, selectedSymbol.price),
         low: Math.min(last.low, selectedSymbol.price),
-        volume: last.volume + Math.floor(Math.random() * 20 + 5),
+        volume: last.volume + Math.floor(Math.random() * 25 + 5),
       };
       const copy = [...prevCandles];
       copy[lastIndex] = updatedLast;
@@ -175,6 +240,28 @@ export function useLiveMarket() {
     });
   }, []);
 
+  const createAlert = useCallback(
+    (symbol: string, targetPrice: number, condition: PriceAlert['condition'], note?: string) => {
+      const live = symbols.find((s) => s.symbol === symbol);
+      const newAlert: PriceAlert = {
+        id: 'alt-' + Date.now(),
+        symbol,
+        targetPrice,
+        condition,
+        createdPrice: live ? live.price : targetPrice,
+        createdAt: Date.now(),
+        triggered: false,
+        note,
+      };
+      setAlerts((prev) => [newAlert, ...prev]);
+    },
+    [symbols]
+  );
+
+  const deleteAlert = useCallback((id: string) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+  }, []);
+
   const executeTrade = useCallback(
     (symbol: string, type: 'BUY' | 'SELL', shares: number) => {
       const live = symbols.find((s) => s.symbol === symbol);
@@ -202,7 +289,6 @@ export function useLiveMarket() {
         setPositions((prev) => [newPos, ...prev]);
         return { success: true, message: `Bought ${shares} shares of ${live.symbol} @ $${live.price}` };
       } else {
-        // Sell / short
         setCashBalance((prev) => prev + totalCost);
         const newPos: TradePosition = {
           id: 'pos-' + Date.now(),
@@ -238,15 +324,27 @@ export function useLiveMarket() {
     selectedSymbol,
     selectedSymbolId,
     setSelectedSymbolId,
+    secondarySymbolId,
+    setSecondarySymbolId,
+    tertiarySymbolId,
+    setTertiarySymbolId,
+    quaternarySymbolId,
+    setQuaternarySymbolId,
     activeTimeframe,
     setActiveTimeframe,
     chartType,
     setChartType,
+    chartLayout,
+    setChartLayout,
     showIndicators,
     setShowIndicators,
     candles,
     watchlist,
     toggleWatchlist,
+    alerts,
+    createAlert,
+    deleteAlert,
+    alertNotification,
     cashBalance,
     positions,
     executeTrade,

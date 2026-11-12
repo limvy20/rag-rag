@@ -34,14 +34,39 @@ export interface Candle {
   volume: number;
 }
 
+export interface VolumeProfileBar {
+  priceLevel: number;
+  buyVolume: number;
+  sellVolume: number;
+  totalVolume: number;
+  isPOC?: boolean; // Point of Control
+}
+
+export interface OrderBookEntry {
+  price: number;
+  size: number;
+  total: number;
+  depthPercent: number;
+}
+
+export interface OrderBookData {
+  bids: OrderBookEntry[];
+  asks: OrderBookEntry[];
+  spread: number;
+  spreadPercent: number;
+}
+
 export interface HeatmapItem {
   symbol: string;
   name: string;
   sector: string;
   marketCap: number; // in billions
   changePercent: number;
+  change1w?: number;
+  change1m?: number;
   price: number;
   volume: string;
+  peRatio?: number;
 }
 
 export interface NewsItem {
@@ -79,4 +104,35 @@ export interface TradePosition {
   pnl: number;
   pnlPercent: number;
   timestamp: number;
+}
+
+export interface PriceAlert {
+  id: string;
+  symbol: string;
+  targetPrice: number;
+  condition: 'crossing_up' | 'crossing_down' | 'greater_than' | 'less_than';
+  createdPrice: number;
+  createdAt: number;
+  triggered: boolean;
+  note?: string;
+}
+
+export type DrawingTool = 'cursor' | 'trendline' | 'horizontal' | 'fibonacci' | 'position' | 'measure';
+
+export interface ChartDrawing {
+  id: string;
+  tool: DrawingTool;
+  symbol: string;
+  points: { x: number; y: number; price?: number; index?: number }[];
+  color?: string;
+}
+
+export interface StrategyPerformance {
+  strategyName: string;
+  netProfitPercent: number;
+  winRate: number;
+  profitFactor: number;
+  maxDrawdown: number;
+  totalTrades: number;
+  sharpeRatio: number;
 }

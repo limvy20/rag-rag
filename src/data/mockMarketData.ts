@@ -1,4 +1,14 @@
-import { MarketSymbol, Candle, HeatmapItem, NewsItem, EconomicEvent } from '../types/market';
+import {
+  MarketSymbol,
+  Candle,
+  HeatmapItem,
+  NewsItem,
+  EconomicEvent,
+  OrderBookData,
+  OrderBookEntry,
+  VolumeProfileBar,
+  StrategyPerformance,
+} from '../types/market';
 
 export const INITIAL_MARKET_SYMBOLS: MarketSymbol[] = [
   // Indices
@@ -159,7 +169,7 @@ export const INITIAL_MARKET_SYMBOLS: MarketSymbol[] = [
     sector: 'Technology',
     currency: 'USD',
     country: 'US',
-    description: 'Pioneer of GPU-accelerated computing and undisputed hardware leader driving global artificial intelligence, data centers, and autonomy.',
+    description: 'Pioneer of GPU-accelerated computing and hardware leader driving global artificial intelligence, data centers, and autonomy.',
     high52w: 153.15,
     low52w: 45.11,
   },
@@ -411,28 +421,6 @@ export const INITIAL_MARKET_SYMBOLS: MarketSymbol[] = [
     high52w: 66.06,
     low52w: 15.66,
   },
-  {
-    symbol: 'XOM',
-    name: 'Exxon Mobil Corporation',
-    type: 'stock',
-    price: 118.90,
-    change: -0.80,
-    changePercent: -0.67,
-    open: 119.80,
-    high: 120.20,
-    low: 118.40,
-    volume: '15.6M',
-    volumeNumeric: 15600000,
-    marketCap: '472B',
-    peRatio: 14.1,
-    rating: 'Neutral',
-    sparkline: [120, 119.8, 119.4, 119.1, 119.0, 118.9],
-    sector: 'Energy',
-    currency: 'USD',
-    country: 'US',
-    high52w: 126.34,
-    low52w: 95.77,
-  },
 
   // Crypto
   {
@@ -495,25 +483,6 @@ export const INITIAL_MARKET_SYMBOLS: MarketSymbol[] = [
     low52w: 52.00,
   },
   {
-    symbol: 'BNBUSD',
-    name: 'BNB',
-    type: 'crypto',
-    price: 662.30,
-    change: 11.50,
-    changePercent: 1.77,
-    open: 650.80,
-    high: 668.00,
-    low: 648.50,
-    volume: '$1.8B',
-    volumeNumeric: 1800000000,
-    marketCap: '96B',
-    rating: 'Buy',
-    sparkline: [645, 650, 654, 658, 660, 662.3],
-    currency: 'USD',
-    high52w: 720.00,
-    low52w: 228.00,
-  },
-  {
     symbol: 'XRPUSD',
     name: 'XRP',
     type: 'crypto',
@@ -570,42 +539,6 @@ export const INITIAL_MARKET_SYMBOLS: MarketSymbol[] = [
     high52w: 161.95,
     low52w: 139.58,
   },
-  {
-    symbol: 'GBPUSD',
-    name: 'British Pound / US Dollar',
-    type: 'forex',
-    price: 1.2680,
-    change: -0.0035,
-    changePercent: -0.28,
-    open: 1.2715,
-    high: 1.2730,
-    low: 1.2660,
-    volume: '180K pips',
-    volumeNumeric: 180000,
-    rating: 'Neutral',
-    sparkline: [1.273, 1.272, 1.270, 1.269, 1.2682, 1.268],
-    currency: 'USD',
-    high52w: 1.3434,
-    low52w: 1.2300,
-  },
-  {
-    symbol: 'AUDUSD',
-    name: 'Australian Dollar / US Dollar',
-    type: 'forex',
-    price: 0.6524,
-    change: 0.0018,
-    changePercent: 0.28,
-    open: 0.6506,
-    high: 0.6540,
-    low: 0.6495,
-    volume: '140K pips',
-    volumeNumeric: 140000,
-    rating: 'Buy',
-    sparkline: [0.649, 0.650, 0.651, 0.6518, 0.6522, 0.6524],
-    currency: 'USD',
-    high52w: 0.6942,
-    low52w: 0.6350,
-  },
 
   // Futures & Commodities
   {
@@ -644,42 +577,6 @@ export const INITIAL_MARKET_SYMBOLS: MarketSymbol[] = [
     high52w: 2790.15,
     low52w: 1984.00,
   },
-  {
-    symbol: 'XAGUSD',
-    name: 'Silver Spot',
-    type: 'commodity',
-    price: 31.42,
-    change: 0.48,
-    changePercent: 1.55,
-    open: 30.94,
-    high: 31.65,
-    low: 30.80,
-    volume: '450K oz',
-    volumeNumeric: 450000,
-    rating: 'Buy',
-    sparkline: [30.6, 30.8, 31.0, 31.2, 31.35, 31.42],
-    currency: 'USD',
-    high52w: 35.40,
-    low52w: 21.90,
-  },
-  {
-    symbol: 'NG',
-    name: 'Natural Gas Futures',
-    type: 'commodity',
-    price: 3.185,
-    change: -0.065,
-    changePercent: -2.00,
-    open: 3.250,
-    high: 3.290,
-    low: 3.150,
-    volume: '110K',
-    volumeNumeric: 110000,
-    rating: 'Sell',
-    sparkline: [3.31, 3.28, 3.24, 3.22, 3.19, 3.185],
-    currency: 'USD',
-    high52w: 3.65,
-    low52w: 1.52,
-  },
 
   // Sovereign Bonds
   {
@@ -701,88 +598,42 @@ export const INITIAL_MARKET_SYMBOLS: MarketSymbol[] = [
     high52w: 4.74,
     low52w: 3.60,
   },
-  {
-    symbol: 'US02Y',
-    name: 'US 2-Year Treasury Yield',
-    type: 'bond',
-    price: 4.285,
-    change: -0.018,
-    changePercent: -0.42,
-    open: 4.303,
-    high: 4.315,
-    low: 4.275,
-    volume: 'Active',
-    volumeNumeric: 100000,
-    rating: 'Neutral',
-    sparkline: [4.32, 4.31, 4.30, 4.295, 4.289, 4.285],
-    currency: '%',
-    country: 'US',
-    high52w: 5.04,
-    low52w: 3.55,
-  },
-  {
-    symbol: 'DE10Y',
-    name: 'Germany 10-Year Bund Yield',
-    type: 'bond',
-    price: 2.365,
-    change: 0.012,
-    changePercent: 0.51,
-    open: 2.353,
-    high: 2.378,
-    low: 2.342,
-    volume: 'Active',
-    volumeNumeric: 50000,
-    rating: 'Neutral',
-    sparkline: [2.34, 2.348, 2.355, 2.360, 2.363, 2.365],
-    currency: '%',
-    country: 'DE',
-    high52w: 2.70,
-    low52w: 2.05,
-  },
 ];
 
 export const HEATMAP_DATA: HeatmapItem[] = [
   // Technology
-  { symbol: 'NVDA', name: 'NVIDIA', sector: 'Technology', marketCap: 3620, changePercent: 2.88, price: 148.25, volume: '68M' },
-  { symbol: 'AAPL', name: 'Apple', sector: 'Technology', marketCap: 3520, changePercent: 0.71, price: 232.40, volume: '42M' },
-  { symbol: 'MSFT', name: 'Microsoft', sector: 'Technology', marketCap: 3190, changePercent: 0.80, price: 428.80, volume: '22M' },
-  { symbol: 'AVGO', name: 'Broadcom', sector: 'Technology', marketCap: 802, changePercent: 1.83, price: 172.40, volume: '18M' },
-  { symbol: 'ORCL', name: 'Oracle', sector: 'Technology', marketCap: 520, changePercent: 1.45, price: 189.60, volume: '12M' },
-  { symbol: 'CRM', name: 'Salesforce', sector: 'Technology', marketCap: 310, changePercent: -0.65, price: 326.50, volume: '8M' },
-  { symbol: 'AMD', name: 'AMD', sector: 'Technology', marketCap: 229, changePercent: 3.51, price: 141.60, volume: '48M' },
-  { symbol: 'ADBE', name: 'Adobe', sector: 'Technology', marketCap: 222, changePercent: -1.20, price: 495.20, volume: '4M' },
-  { symbol: 'PLTR', name: 'Palantir', sector: 'Technology', marketCap: 144, changePercent: 5.96, price: 64.85, volume: '74M' },
+  { symbol: 'NVDA', name: 'NVIDIA', sector: 'Technology', marketCap: 3620, changePercent: 2.88, change1w: 6.4, change1m: 14.2, price: 148.25, volume: '68M', peRatio: 58.4 },
+  { symbol: 'AAPL', name: 'Apple', sector: 'Technology', marketCap: 3520, changePercent: 0.71, change1w: 1.8, change1m: 4.5, price: 232.40, volume: '42M', peRatio: 36.2 },
+  { symbol: 'MSFT', name: 'Microsoft', sector: 'Technology', marketCap: 3190, changePercent: 0.80, change1w: 2.1, change1m: 5.1, price: 428.80, volume: '22M', peRatio: 35.1 },
+  { symbol: 'AVGO', name: 'Broadcom', sector: 'Technology', marketCap: 802, changePercent: 1.83, change1w: 4.2, change1m: 9.8, price: 172.40, volume: '18M', peRatio: 38.6 },
+  { symbol: 'ORCL', name: 'Oracle', sector: 'Technology', marketCap: 520, changePercent: 1.45, change1w: 3.0, change1m: 8.2, price: 189.60, volume: '12M', peRatio: 41.2 },
+  { symbol: 'CRM', name: 'Salesforce', sector: 'Technology', marketCap: 310, changePercent: -0.65, change1w: -1.2, change1m: 3.4, price: 326.50, volume: '8M', peRatio: 49.5 },
+  { symbol: 'AMD', name: 'AMD', sector: 'Technology', marketCap: 229, changePercent: 3.51, change1w: 7.8, change1m: 11.2, price: 141.60, volume: '48M', peRatio: 98.4 },
+  { symbol: 'PLTR', name: 'Palantir', sector: 'Technology', marketCap: 144, changePercent: 5.96, change1w: 14.5, change1m: 38.2, price: 64.85, volume: '74M', peRatio: 112.5 },
 
   // Communication Services
-  { symbol: 'GOOGL', name: 'Alphabet', sector: 'Communication Services', marketCap: 2250, changePercent: 1.00, price: 182.10, volume: '26M' },
-  { symbol: 'META', name: 'Meta', sector: 'Communication Services', marketCap: 1490, changePercent: 1.27, price: 588.60, volume: '14M' },
-  { symbol: 'NFLX', name: 'Netflix', sector: 'Communication Services', marketCap: 385, changePercent: 1.95, price: 894.20, volume: '5M' },
-  { symbol: 'DIS', name: 'Walt Disney', sector: 'Communication Services', marketCap: 210, changePercent: -0.42, price: 115.80, volume: '9M' },
+  { symbol: 'GOOGL', name: 'Alphabet', sector: 'Communication Services', marketCap: 2250, changePercent: 1.00, change1w: 2.5, change1m: 6.8, price: 182.10, volume: '26M', peRatio: 23.8 },
+  { symbol: 'META', name: 'Meta', sector: 'Communication Services', marketCap: 1490, changePercent: 1.27, change1w: 3.8, change1m: 9.5, price: 588.60, volume: '14M', peRatio: 28.5 },
+  { symbol: 'NFLX', name: 'Netflix', sector: 'Communication Services', marketCap: 385, changePercent: 1.95, change1w: 5.2, change1m: 12.1, price: 894.20, volume: '5M', peRatio: 46.2 },
 
   // Consumer Cyclical
-  { symbol: 'AMZN', name: 'Amazon', sector: 'Consumer Cyclical', marketCap: 2180, changePercent: 1.41, price: 208.50, volume: '34M' },
-  { symbol: 'TSLA', name: 'Tesla', sector: 'Consumer Cyclical', marketCap: 1080, changePercent: 4.37, price: 338.90, volume: '88M' },
-  { symbol: 'HD', name: 'Home Depot', sector: 'Consumer Cyclical', marketCap: 395, changePercent: -0.32, price: 402.10, volume: '6M' },
-  { symbol: 'MCD', name: "McDonald's", sector: 'Consumer Cyclical', marketCap: 212, changePercent: 0.25, price: 294.40, volume: '3M' },
+  { symbol: 'AMZN', name: 'Amazon', sector: 'Consumer Cyclical', marketCap: 2180, changePercent: 1.41, change1w: 3.2, change1m: 8.9, price: 208.50, volume: '34M', peRatio: 44.2 },
+  { symbol: 'TSLA', name: 'Tesla', sector: 'Consumer Cyclical', marketCap: 1080, changePercent: 4.37, change1w: 12.8, change1m: 41.5, price: 338.90, volume: '88M', peRatio: 104.2 },
+  { symbol: 'HD', name: 'Home Depot', sector: 'Consumer Cyclical', marketCap: 395, changePercent: -0.32, change1w: 0.5, change1m: 2.1, price: 402.10, volume: '6M', peRatio: 26.4 },
 
   // Financials
-  { symbol: 'JPM', name: 'JPMorgan Chase', sector: 'Financials', marketCap: 685, changePercent: -0.55, price: 242.15, volume: '9M' },
-  { symbol: 'V', name: 'Visa', sector: 'Financials', marketCap: 590, changePercent: 0.40, price: 308.20, volume: '5M' },
-  { symbol: 'MA', name: 'Mastercard', sector: 'Financials', marketCap: 480, changePercent: 0.52, price: 518.70, volume: '4M' },
-  { symbol: 'BAC', name: 'Bank of America', sector: 'Financials', marketCap: 345, changePercent: -0.85, price: 46.20, volume: '28M' },
-  { symbol: 'GS', name: 'Goldman Sachs', sector: 'Financials', marketCap: 195, changePercent: 0.88, price: 585.30, volume: '3M' },
+  { symbol: 'JPM', name: 'JPMorgan Chase', sector: 'Financials', marketCap: 685, changePercent: -0.55, change1w: 1.1, change1m: 6.2, price: 242.15, volume: '9M', peRatio: 12.8 },
+  { symbol: 'V', name: 'Visa', sector: 'Financials', marketCap: 590, changePercent: 0.40, change1w: 1.5, change1m: 4.8, price: 308.20, volume: '5M', peRatio: 31.2 },
+  { symbol: 'GS', name: 'Goldman Sachs', sector: 'Financials', marketCap: 195, changePercent: 0.88, change1w: 2.4, change1m: 7.9, price: 585.30, volume: '3M', peRatio: 16.5 },
 
   // Healthcare
-  { symbol: 'LLY', name: 'Eli Lilly', sector: 'Healthcare', marketCap: 772, changePercent: 1.60, price: 812.50, volume: '3.8M' },
-  { symbol: 'UNH', name: 'UnitedHealth', sector: 'Healthcare', marketCap: 540, changePercent: -1.45, price: 588.10, volume: '4.2M' },
-  { symbol: 'JNJ', name: 'Johnson & Johnson', sector: 'Healthcare', marketCap: 375, changePercent: 0.15, price: 156.40, volume: '7.1M' },
-  { symbol: 'ABBV', name: 'AbbVie', sector: 'Healthcare', marketCap: 310, changePercent: -0.70, price: 174.80, volume: '5.5M' },
+  { symbol: 'LLY', name: 'Eli Lilly', sector: 'Healthcare', marketCap: 772, changePercent: 1.60, change1w: 3.4, change1m: -2.1, price: 812.50, volume: '3.8M', peRatio: 64.1 },
+  { symbol: 'UNH', name: 'UnitedHealth', sector: 'Healthcare', marketCap: 540, changePercent: -1.45, change1w: -2.8, change1m: 1.5, price: 588.10, volume: '4.2M', peRatio: 25.1 },
 
   // Energy & Industrials
-  { symbol: 'XOM', name: 'Exxon Mobil', sector: 'Energy & Industrials', marketCap: 472, changePercent: -0.67, price: 118.90, volume: '15M' },
-  { symbol: 'CVX', name: 'Chevron', sector: 'Energy & Industrials', marketCap: 288, changePercent: -0.45, price: 158.20, volume: '9M' },
-  { symbol: 'CAT', name: 'Caterpillar', sector: 'Energy & Industrials', marketCap: 190, changePercent: 1.15, price: 395.60, volume: '4M' },
-  { symbol: 'GE', name: 'GE Aerospace', sector: 'Energy & Industrials', marketCap: 195, changePercent: 2.10, price: 184.30, volume: '6M' },
+  { symbol: 'XOM', name: 'Exxon Mobil', sector: 'Energy & Industrials', marketCap: 472, changePercent: -0.67, change1w: -0.8, change1m: -1.2, price: 118.90, volume: '15M', peRatio: 14.1 },
+  { symbol: 'CAT', name: 'Caterpillar', sector: 'Energy & Industrials', marketCap: 190, changePercent: 1.15, change1w: 2.8, change1m: 8.4, price: 395.60, volume: '4M', peRatio: 18.2 },
+  { symbol: 'GE', name: 'GE Aerospace', sector: 'Energy & Industrials', marketCap: 195, changePercent: 2.10, change1w: 4.6, change1m: 11.2, price: 184.30, volume: '6M', peRatio: 32.8 },
 ];
 
 export const MOCK_NEWS: NewsItem[] = [
@@ -903,32 +754,36 @@ export const MOCK_ECONOMIC_EVENTS: EconomicEvent[] = [
 /**
  * Generate synthetic realistic OHLC candlestick series for a symbol
  */
-export function generateCandleSeries(basePrice: number, count: number = 60, timeframe: string = '1D'): Candle[] {
+export function generateCandleSeries(basePrice: number, count: number = 70, timeframe: string = '1D'): Candle[] {
   const candles: Candle[] = [];
   const now = Date.now();
   
-  let intervalMs = 60 * 1000 * 5; // 5 min default for 1D
-  if (timeframe === '5D') intervalMs = 60 * 1000 * 30; // 30 min
-  if (timeframe === '1M') intervalMs = 60 * 1000 * 60 * 4; // 4 hours
-  if (timeframe === '1Y') intervalMs = 60 * 1000 * 60 * 24; // 1 day
+  let intervalMs = 60 * 1000 * 5; // default 5m
+  if (timeframe === '1m') intervalMs = 60 * 1000;
+  if (timeframe === '5m') intervalMs = 60 * 1000 * 5;
+  if (timeframe === '15m') intervalMs = 60 * 1000 * 15;
+  if (timeframe === '1h') intervalMs = 60 * 1000 * 60;
+  if (timeframe === '4h') intervalMs = 60 * 1000 * 60 * 4;
+  if (timeframe === '1D') intervalMs = 60 * 1000 * 60 * 24;
+  if (timeframe === '1W') intervalMs = 60 * 1000 * 60 * 24 * 7;
 
-  // Start from past to present
-  let currentClose = basePrice * (1 - (count * 0.0015)); // slight uptrend historically
-  const volatility = basePrice * 0.004;
+  let currentClose = basePrice * (1 - (count * 0.0018));
+  const volatility = basePrice * 0.005;
 
   for (let i = count; i >= 0; i--) {
     const timestamp = now - i * intervalMs;
     const dateObj = new Date(timestamp);
-    const timeStr = timeframe === '1D'
-      ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      : dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    let timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (timeframe === '1D' || timeframe === '1W' || timeframe === '1Y') {
+      timeStr = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
 
     const open = currentClose;
-    const delta = (Math.random() - 0.48) * volatility * 2;
-    const close = Math.max(open + delta, basePrice * 0.5);
-    const high = Math.max(open, close) + Math.random() * volatility * 0.8;
-    const low = Math.min(open, close) - Math.random() * volatility * 0.8;
-    const volume = Math.floor(Math.random() * 50000 + 10000);
+    const delta = (Math.random() - 0.485) * volatility * 2.2;
+    const close = Math.max(open + delta, basePrice * 0.4);
+    const high = Math.max(open, close) + Math.random() * volatility * 0.9;
+    const low = Math.min(open, close) - Math.random() * volatility * 0.9;
+    const volume = Math.floor(Math.random() * 65000 + 12000);
 
     candles.push({
       time: timeStr,
@@ -943,7 +798,6 @@ export function generateCandleSeries(basePrice: number, count: number = 60, time
     currentClose = close;
   }
 
-  // Ensure last candle matches basePrice closely
   if (candles.length > 0) {
     const last = candles[candles.length - 1];
     last.close = basePrice;
@@ -953,3 +807,166 @@ export function generateCandleSeries(basePrice: number, count: number = 60, time
 
   return candles;
 }
+
+/**
+ * Heikin-Ashi calculation helper
+ */
+export function computeHeikinAshi(candles: Candle[]): Candle[] {
+  if (!candles || candles.length === 0) return [];
+  const haCandles: Candle[] = [];
+
+  for (let i = 0; i < candles.length; i++) {
+    const cur = candles[i];
+    const haClose = (cur.open + cur.high + cur.low + cur.close) / 4;
+    let haOpen = cur.open;
+    if (i > 0) {
+      haOpen = (haCandles[i - 1].open + haCandles[i - 1].close) / 2;
+    }
+    const haHigh = Math.max(cur.high, haOpen, haClose);
+    const haLow = Math.min(cur.low, haOpen, haClose);
+
+    haCandles.push({
+      time: cur.time,
+      timestamp: cur.timestamp,
+      open: Number(haOpen.toFixed(2)),
+      high: Number(haHigh.toFixed(2)),
+      low: Number(haLow.toFixed(2)),
+      close: Number(haClose.toFixed(2)),
+      volume: cur.volume,
+    });
+  }
+  return haCandles;
+}
+
+/**
+ * Generate Volume Profile (VRVP) across price levels
+ */
+export function generateVolumeProfile(candles: Candle[], bins: number = 24): VolumeProfileBar[] {
+  if (!candles || candles.length === 0) return [];
+
+  const minPrice = Math.min(...candles.map((c) => c.low));
+  const maxPrice = Math.max(...candles.map((c) => c.high));
+  const step = (maxPrice - minPrice) / bins || 1;
+
+  const profile: VolumeProfileBar[] = [];
+  for (let i = 0; i < bins; i++) {
+    const level = minPrice + i * step + step / 2;
+    profile.push({
+      priceLevel: Number(level.toFixed(2)),
+      buyVolume: 0,
+      sellVolume: 0,
+      totalVolume: 0,
+    });
+  }
+
+  candles.forEach((c) => {
+    const binIdx = Math.min(bins - 1, Math.max(0, Math.floor((c.close - minPrice) / step)));
+    const isUp = c.close >= c.open;
+    if (isUp) {
+      profile[binIdx].buyVolume += c.volume * 0.65;
+      profile[binIdx].sellVolume += c.volume * 0.35;
+    } else {
+      profile[binIdx].buyVolume += c.volume * 0.35;
+      profile[binIdx].sellVolume += c.volume * 0.65;
+    }
+    profile[binIdx].totalVolume += c.volume;
+  });
+
+  // Find Point of Control (POC - highest volume node)
+  let maxVol = 0;
+  let pocIdx = 0;
+  profile.forEach((p, idx) => {
+    if (p.totalVolume > maxVol) {
+      maxVol = p.totalVolume;
+      pocIdx = idx;
+    }
+  });
+  if (profile[pocIdx]) {
+    profile[pocIdx].isPOC = true;
+  }
+
+  return profile;
+}
+
+/**
+ * Generate realistic Level 2 Order Book (Depth of Market)
+ */
+export function generateOrderBook(midPrice: number): OrderBookData {
+  const tickSize = midPrice > 1000 ? 1 : midPrice > 100 ? 0.1 : 0.01;
+  const spread = tickSize;
+  const spreadPercent = (spread / midPrice) * 100;
+
+  const bids: OrderBookEntry[] = [];
+  const asks: OrderBookEntry[] = [];
+
+  let cumBid = 0;
+  let cumAsk = 0;
+
+  for (let i = 1; i <= 10; i++) {
+    const bidPrice = Number((midPrice - i * tickSize).toFixed(midPrice < 5 ? 4 : 2));
+    const bidSize = Math.floor(Math.random() * 450 + 50);
+    cumBid += bidSize;
+
+    const askPrice = Number((midPrice + i * tickSize).toFixed(midPrice < 5 ? 4 : 2));
+    const askSize = Math.floor(Math.random() * 450 + 50);
+    cumAsk += askSize;
+
+    bids.push({
+      price: bidPrice,
+      size: bidSize,
+      total: cumBid,
+      depthPercent: 0,
+    });
+
+    asks.push({
+      price: askPrice,
+      size: askSize,
+      total: cumAsk,
+      depthPercent: 0,
+    });
+  }
+
+  const maxTotal = Math.max(cumBid, cumAsk, 1);
+  bids.forEach((b) => (b.depthPercent = (b.total / maxTotal) * 100));
+  asks.forEach((a) => (a.depthPercent = (a.total / maxTotal) * 100));
+
+  return {
+    bids,
+    asks,
+    spread,
+    spreadPercent,
+  };
+}
+
+/**
+ * Mock Strategy Backtester results
+ */
+export const MOCK_STRATEGIES: Record<string, StrategyPerformance> = {
+  'EMA Golden Cross (9/21)': {
+    strategyName: 'EMA Golden Cross (9/21)',
+    netProfitPercent: 34.8,
+    winRate: 64.2,
+    profitFactor: 2.18,
+    maxDrawdown: 8.4,
+    totalTrades: 142,
+    sharpeRatio: 1.84,
+  },
+  'RSI Divergence + Bollinger': {
+    strategyName: 'RSI Divergence + Bollinger',
+    netProfitPercent: 41.5,
+    winRate: 71.0,
+    profitFactor: 2.65,
+    maxDrawdown: 6.2,
+    totalTrades: 98,
+    sharpeRatio: 2.21,
+  },
+  'SuperTrend Trend Following': {
+    strategyName: 'SuperTrend Trend Following',
+    netProfitPercent: 28.2,
+    winRate: 58.5,
+    profitFactor: 1.92,
+    maxDrawdown: 11.1,
+    totalTrades: 176,
+    sharpeRatio: 1.62,
+  },
+};

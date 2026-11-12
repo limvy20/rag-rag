@@ -1,17 +1,21 @@
 import React from 'react';
-import { Search, Bookmark, Sun, Moon, Briefcase, TrendingUp } from 'lucide-react';
+import { Search, Bookmark, Sun, Moon, Briefcase, TrendingUp, Bell, Grid, Columns, Square } from 'lucide-react';
 
 interface HeaderProps {
   darkMode: boolean;
   setDarkMode: (val: boolean) => void;
   onOpenSearch: () => void;
   onToggleWatchlist: () => void;
+  onOpenAlerts: () => void;
+  activeAlertsCount: number;
   watchlistCount: number;
   cashBalance: number;
   openPositionsCount: number;
   onOpenPaperTrade: () => void;
   activeNavTab: string;
   setActiveNavTab: (tab: string) => void;
+  chartLayout: '1' | '2' | '4';
+  setChartLayout: (layout: '1' | '2' | '4') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,22 +23,25 @@ export const Header: React.FC<HeaderProps> = ({
   setDarkMode,
   onOpenSearch,
   onToggleWatchlist,
+  onOpenAlerts,
+  activeAlertsCount,
   watchlistCount,
   cashBalance,
   openPositionsCount,
   onOpenPaperTrade,
   activeNavTab,
   setActiveNavTab,
+  chartLayout,
+  setChartLayout,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-[#131722] border-b border-[#e0e3eb] dark:border-[#2a2e39] text-[#131722] dark:text-[#d1d4dc] transition-colors">
       <div className="max-w-[1720px] mx-auto px-4 lg:px-6 h-14 flex items-center justify-between gap-4">
-        {/* Left: Brand + Navigation */}
-        <div className="flex items-center gap-6 lg:gap-8 shrink-0">
+        {/* Left: Brand + Pro Badge + Navigation */}
+        <div className="flex items-center gap-5 lg:gap-7 shrink-0">
           {/* TradingView Iconic Brand Logo */}
-          <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setActiveNavTab('overview')}>
+          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setActiveNavTab('overview')}>
             <svg className="w-8 h-8 text-[#2962ff] group-hover:scale-105 transition-transform" viewBox="0 0 36 28" fill="currentColor">
-              {/* TradingView distinct 3 geometric shapes */}
               <rect x="0" y="4" width="8" height="20" rx="1.5" />
               <polygon points="12,24 20,4 20,24" />
               <rect x="24" y="10" width="8" height="14" rx="1.5" />
@@ -42,14 +49,14 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-lg font-bold tracking-tight text-[#131722] dark:text-white font-['Plus_Jakarta_Sans']">
               TradingView
             </span>
-            <span className="hidden sm:inline-block text-xs font-semibold uppercase tracking-wider text-[#787b86] border-l border-[#e0e3eb] dark:border-[#2a2e39] pl-2.5 ml-0.5">
-              Markets
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#2962ff] text-white">
+              PRO
             </span>
           </div>
 
           {/* Nav links */}
-          <nav className="hidden xl:flex items-center gap-6 text-sm font-medium text-[#787b86]">
-            {['Products', 'Community', 'Markets', 'News', 'Brokers', 'More'].map((link) => {
+          <nav className="hidden xl:flex items-center gap-5 text-sm font-medium text-[#787b86]">
+            {['Markets', 'Products', 'Community', 'News', 'Pine Script', 'Brokers'].map((link) => {
               const isActive = link === 'Markets';
               return (
                 <button
@@ -76,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <div className="flex items-center gap-2">
               <Search className="w-3.5 h-3.5 text-[#787b86]" />
-              <span className="truncate">Search markets, symbols, news (e.g. NVDA, SPX, BTC)</span>
+              <span className="truncate">Search markets, symbols, pine scripts (e.g. NVDA, SPX, BTC)</span>
             </div>
             <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[10px] bg-white dark:bg-[#131722] text-[#787b86] rounded border border-[#e0e3eb] dark:border-[#2a2e39] font-mono">
               /
@@ -85,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right: Controls & Actions */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Mobile search trigger */}
           <button
             onClick={onOpenSearch}
@@ -93,6 +100,49 @@ export const Header: React.FC<HeaderProps> = ({
             title="Search"
           >
             <Search className="w-4 h-4" />
+          </button>
+
+          {/* Multi-Chart Layout Switcher (Pro Feature) */}
+          <div className="hidden lg:flex items-center bg-[#f0f3fa] dark:bg-[#1e222d] border border-[#e0e3eb] dark:border-[#2a2e39] rounded-lg p-0.5 text-xs">
+            <button
+              onClick={() => setChartLayout('1')}
+              className={`p-1.5 rounded transition-colors ${
+                chartLayout === '1' ? 'bg-white dark:bg-[#2a2e39] text-[#2962ff] shadow-xs' : 'text-[#787b86] hover:text-[#131722] dark:hover:text-white'
+              }`}
+              title="Single Chart View"
+            >
+              <Square className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setChartLayout('2')}
+              className={`p-1.5 rounded transition-colors ${
+                chartLayout === '2' ? 'bg-white dark:bg-[#2a2e39] text-[#2962ff] shadow-xs' : 'text-[#787b86] hover:text-[#131722] dark:hover:text-white'
+              }`}
+              title="Dual Split Chart View"
+            >
+              <Columns className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setChartLayout('4')}
+              className={`p-1.5 rounded transition-colors ${
+                chartLayout === '4' ? 'bg-white dark:bg-[#2a2e39] text-[#2962ff] shadow-xs' : 'text-[#787b86] hover:text-[#131722] dark:hover:text-white'
+              }`}
+              title="Quad 4-Chart Grid View"
+            >
+              <Grid className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Price Alerts Trigger Button */}
+          <button
+            onClick={onOpenAlerts}
+            className="relative p-2 text-[#787b86] hover:text-[#131722] dark:hover:text-white hover:bg-[#f0f3fa] dark:hover:bg-[#1e222d] rounded-lg transition-colors"
+            title="Price Alerts"
+          >
+            <Bell className="w-4 h-4 text-[#f59e0b]" />
+            {activeAlertsCount > 0 && (
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#f59e0b]" />
+            )}
           </button>
 
           {/* Paper Trading Account Badge */}
@@ -137,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
-          {/* Sign In / Launch Chart button */}
+          {/* Quick Trade Button */}
           <button
             onClick={onOpenPaperTrade}
             className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#2962ff] hover:bg-[#1e53e5] rounded-lg transition-colors shadow-sm"
