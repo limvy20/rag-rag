@@ -249,12 +249,15 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
   // Helper coordinate mappers
   const getX = (index: number) => {
     const innerWidth = chartWidth - padding.left - padding.right;
-    return padding.left + (index / (candles.length - 1 || 1)) * innerWidth;
+    const denominator = candles.length > 1 ? candles.length - 1 : 1;
+    return padding.left + (index / denominator) * innerWidth;
   };
 
   const getY = (val: number) => {
+    if (!Number.isFinite(val)) return padding.top;
     const innerHeight = chartHeight - padding.top - padding.bottom;
-    return padding.top + innerHeight - ((val - minPrice) / priceRange) * innerHeight;
+    const range = priceRange > 0 ? priceRange : 1;
+    return padding.top + innerHeight - ((val - minPrice) / range) * innerHeight;
   };
 
   // Crosshair tracking & Interactive Drawing
@@ -679,31 +682,44 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             {/* Volume Profile (VRVP) Histogram on Right side */}
             {showIndicators.volumeProfile &&
               volumeProfile.map((vp, idx) => {
+                if (!vp || !vp.totalVolume || vp.totalVolume <= 0 || !maxVPVolume || maxVPVolume <= 0) {
+                  return null;
+                }
                 const y = getY(vp.priceLevel);
-                const barWidth = (vp.totalVolume / maxVPVolume) * 90;
-                const buyWidth = (vp.buyVolume / vp.totalVolume) * barWidth;
+                const barWidth = Math.max(0, (vp.totalVolume / maxVPVolume) * 90);
+                const buyFraction = vp.buyVolume > 0 ? vp.buyVolume / vp.totalVolume : 0.5;
+                const buyWidth = Math.max(0, buyFraction * barWidth);
+                const sellWidth = Math.max(0, barWidth - buyWidth);
                 const xStart = chartWidth - padding.right - barWidth;
+
+                if (!Number.isFinite(xStart) || !Number.isFinite(buyWidth) || !Number.isFinite(sellWidth) || !Number.isFinite(y)) {
+                  return null;
+                }
 
                 return (
                   <g key={'vp-' + idx}>
                     {/* Buy Vol */}
-                    <rect
-                      x={xStart}
-                      y={y - 5}
-                      width={buyWidth}
-                      height="9"
-                      fill="#089981"
-                      opacity="0.3"
-                    />
+                    {buyWidth > 0 && (
+                      <rect
+                        x={xStart}
+                        y={y - 5}
+                        width={buyWidth}
+                        height="9"
+                        fill="#089981"
+                        opacity="0.3"
+                      />
+                    )}
                     {/* Sell Vol */}
-                    <rect
-                      x={xStart + buyWidth}
-                      y={y - 5}
-                      width={barWidth - buyWidth}
-                      height="9"
-                      fill="#f23645"
-                      opacity="0.3"
-                    />
+                    {sellWidth > 0 && (
+                      <rect
+                        x={xStart + buyWidth}
+                        y={y - 5}
+                        width={sellWidth}
+                        height="9"
+                        fill="#f23645"
+                        opacity="0.3"
+                      />
+                    )}
                     {/* Point of Control (POC) bright red horizontal ray */}
                     {vp.isPOC && (
                       <line
@@ -724,11 +740,17 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             {showIndicators.volume &&
               candles.map((candle, idx) => {
                 const x = getX(idx);
-                const volRatio = candle.volume / maxVolume;
-                const barHeight = volRatio * 50;
+                const safeMaxVol = maxVolume > 0 ? maxVolume : 1;
+                const volRatio = (candle.volume || 0) / safeMaxVol;
+                const barHeight = Math.max(0, volRatio * 50);
                 const y = chartHeight - padding.bottom - barHeight;
                 const isUp = candle.close >= candle.open;
-                const barWidth = Math.max(1.5, (chartWidth / candles.length) * 0.55);
+                const candleCount = candles.length > 0 ? candles.length : 1;
+                const barWidth = Math.max(1.5, (chartWidth / candleCount) * 0.55);
+
+                if (!Number.isFinite(x) || !Number.isFinite(barWidth) || !Number.isFinite(barHeight) || !Number.isFinite(y)) {
+                  return null;
+                }
 
                 return (
                   <rect
@@ -784,7 +806,12 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
                 const candleTop = Math.min(yOpen, yClose);
                 const candleBodyHeight = Math.max(2, Math.abs(yClose - yOpen));
-                const candleWidth = Math.max(3, (chartWidth / candles.length) * 0.65);
+                const candleCount = candles.length > 0 ? candles.length : 1;
+                const candleWidth = Math.max(3, (chartWidth / candleCount) * 0.65);
+
+                if (!Number.isFinite(x) || !Number.isFinite(candleTop) || !Number.isFinite(candleWidth) || !Number.isFinite(candleBodyHeight) || !Number.isFinite(yHigh) || !Number.isFinite(yLow)) {
+                  return null;
+                }
 
                 return (
                   <g key={'candle-' + idx}>
@@ -938,12 +965,19 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 const topY = Math.min(p1.y, p2.y);
                 const midY = (p1.y + p2.y) / 2;
                 const botY = Math.max(p1.y, p2.y);
+                const targetHeight = Math.max(2, midY - topY);
+                const stopHeight = Math.max(2, botY - midY);
+
+                if (!Number.isFinite(p1.x) || !Number.isFinite(topY) || !Number.isFinite(midY) || !Number.isFinite(botY)) {
+                  return null;
+                }
+
                 return (
                   <g key={draw.id}>
                     {/* Target Profit Area (Green) */}
-                    <rect x={p1.x} y={topY} width="120" height={midY - topY} fill="#089981" opacity="0.25" />
+                    <rect x={p1.x} y={topY} width="120" height={targetHeight} fill="#089981" opacity="0.25" />
                     {/* Stop Loss Area (Red) */}
-                    <rect x={p1.x} y={midY} width="120" height={botY - midY} fill="#f23645" opacity="0.25" />
+                    <rect x={p1.x} y={midY} width="120" height={stopHeight} fill="#f23645" opacity="0.25" />
                     <line x1={p1.x} y1={midY} x2={p1.x + 120} y2={midY} stroke="#2962ff" strokeWidth="2" />
                     <text x={p1.x + 8} y={midY - 5} fill="#089981" fontSize="10" fontWeight="bold">
                       Target 1:2.5 R:R
@@ -1012,7 +1046,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             {/* RSI Sub-Chart */}
             {showIndicators.rsi && (
               <g transform={`translate(0, ${chartHeight})`}>
-                <rect x={padding.left} y="0" width={chartWidth - padding.left - padding.right} height="80" fill="#181c27" />
+                <rect x={padding.left} y="0" width={Math.max(0, chartWidth - padding.left - padding.right)} height="80" fill="#181c27" />
                 <line x1={padding.left} y1="24" x2={chartWidth - padding.right} y2="24" stroke="#363a45" strokeDasharray="2 2" />
                 <text x={chartWidth - padding.right + 6} y="27" fill="#ec4899" fontSize="9">70</text>
                 <line x1={padding.left} y1="56" x2={chartWidth - padding.right} y2="56" stroke="#363a45" strokeDasharray="2 2" />

@@ -841,12 +841,13 @@ export function computeHeikinAshi(candles: Candle[]): Candle[] {
 /**
  * Generate Volume Profile (VRVP) across price levels
  */
-export function generateVolumeProfile(candles: Candle[], bins: number = 24): VolumeProfileBar[] {
+export function generateVolumeProfile(candles: Candle[], bins: number = 20): VolumeProfileBar[] {
   if (!candles || candles.length === 0) return [];
 
   const minPrice = Math.min(...candles.map((c) => c.low));
   const maxPrice = Math.max(...candles.map((c) => c.high));
-  const step = (maxPrice - minPrice) / bins || 1;
+  const diff = maxPrice - minPrice;
+  const step = (diff > 0 ? diff : 1) / bins;
 
   const profile: VolumeProfileBar[] = [];
   for (let i = 0; i < bins; i++) {
@@ -860,7 +861,7 @@ export function generateVolumeProfile(candles: Candle[], bins: number = 24): Vol
   }
 
   candles.forEach((c) => {
-    const binIdx = Math.min(bins - 1, Math.max(0, Math.floor((c.close - minPrice) / step)));
+    const binIdx = Math.min(bins - 1, Math.max(0, Math.floor((c.close - minPrice) / (step || 1))));
     const isUp = c.close >= c.open;
     if (isUp) {
       profile[binIdx].buyVolume += c.volume * 0.65;
@@ -872,20 +873,24 @@ export function generateVolumeProfile(candles: Candle[], bins: number = 24): Vol
     profile[binIdx].totalVolume += c.volume;
   });
 
+  // Filter only bins that have positive trading volume to prevent 0/0 NaNs
+  const validProfile = profile.filter((p) => p.totalVolume > 0);
+  if (validProfile.length === 0) return [];
+
   // Find Point of Control (POC - highest volume node)
   let maxVol = 0;
   let pocIdx = 0;
-  profile.forEach((p, idx) => {
+  validProfile.forEach((p, idx) => {
     if (p.totalVolume > maxVol) {
       maxVol = p.totalVolume;
       pocIdx = idx;
     }
   });
-  if (profile[pocIdx]) {
-    profile[pocIdx].isPOC = true;
+  if (validProfile[pocIdx]) {
+    validProfile[pocIdx].isPOC = true;
   }
 
-  return profile;
+  return validProfile;
 }
 
 /**
