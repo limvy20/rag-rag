@@ -1,0 +1,6 @@
+{
+  "name": "TradingView Markets",
+  "description": "Comprehensive financial markets terminal inspired by TradingView Markets, featuring live multi-asset tracking, interactive candlestick charts, sector heatmaps, market movers, economic calendar, and news.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
